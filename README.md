@@ -6,6 +6,8 @@ Right-click a request, choose **"Find disclosure contact"**, and the add-on reso
 
 This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://github.com/disclose/burp-lookup) and Caido extensions.
 
+> **Status: alpha (first release).** CI-built and inspection-verified — it compiles, the extension auto-registers in the manifest, and it's headless- and EDT-safe — but a full runtime load in a live ZAP is still pending. Please report any load or UX issues.
+
 ---
 
 ## What it does
@@ -20,6 +22,8 @@ This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://gi
 The add-on sends **only the host string** (e.g. `github.com`) to lookup.disclose.io. It never transmits the request line, headers, cookies, parameters, or body of your selected HTTP message. The API is free, CORS-open, and requires no authentication.
 
 A short in-memory cache (5 min TTL) and a 15-second request timeout keep it from spamming the API and from hanging the UI when offline.
+
+The lookup call is made **directly** to lookup.disclose.io (via `java.net.http`), not through ZAP's HTTP sender — so it never appears in your ZAP History or Sites tree and generates no scan traffic. Trade-off: it uses the JVM's default network settings rather than ZAP's configured upstream/corporate proxy, so in locked-down egress environments the add-on needs direct outbound access to `lookup.disclose.io`.
 
 ---
 
