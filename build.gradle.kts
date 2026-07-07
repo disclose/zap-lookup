@@ -20,7 +20,7 @@ java {
 
 dependencies {
     // Gson is NOT provided by ZAP at runtime -> bundled into the .zap add-on.
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.14.0")
 }
 
 zapAddOn {
