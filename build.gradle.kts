@@ -1,4 +1,8 @@
 plugins {
+    // The org.zaproxy.add-on plugin does NOT apply the java plugin itself (the
+    // zap-extensions monorepo applies it centrally via org.zaproxy.common); a
+    // standalone add-on must apply it so java{}/implementation/etc. resolve.
+    `java-library`
     id("org.zaproxy.add-on") version "0.13.1"
 }
 
@@ -25,6 +29,7 @@ zapAddOn {
     zapVersion.set("2.16.0")
     manifest {
         author.set("disclose.io")
+        repo.set("https://github.com/disclose/zap-lookup")
         url.set("https://github.com/disclose/zap-lookup")
     }
 }
