@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🔎 A host's contact or attribution looks wrong
+    url: https://lookup.disclose.io
+    about: Attribution and contacts come from lookup.disclose.io — resolution issues are fixed there, not in this add-on.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/disclose/zap-lookup/security/advisories/new
+    about: Please use private vulnerability reporting — never a public issue.
+  - name: 🌐 About disclose.io
+    url: https://disclose.io
+    about: The project this add-on belongs to.

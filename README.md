@@ -1,3 +1,22 @@
+<div align="center">
+
+# Disclosure Contact Lookup
+
+### Right-click a host in OWASP ZAP and get its security-disclosure contact — from [lookup.disclose.io](https://lookup.disclose.io).
+
+<p>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/disclose/zap-lookup?color=5B3AB6&label=license" alt="license"></a>
+<a href="https://github.com/disclose/zap-lookup/actions/workflows/build.yml"><img src="https://github.com/disclose/zap-lookup/actions/workflows/build.yml/badge.svg" alt="CI build"></a>
+<a href="https://lookup.disclose.io"><img src="https://img.shields.io/badge/lookup-lookup.disclose.io-5B3AB6" alt="lookup lookup.disclose.io"></a>
+<a href="https://github.com/disclose/zap-lookup/issues"><img src="https://img.shields.io/badge/PRs-welcome-5B3AB6" alt="PRs welcome"></a>
+</p>
+
+*Part of the **[disclose.io Project](https://disclose.io)** — the open, vendor-neutral infrastructure for vulnerability disclosure. [Browse the ecosystem →](https://github.com/disclose)*
+
+</div>
+
+---
+
 # Disclosure Contact Lookup — OWASP ZAP add-on
 
 An [OWASP ZAP](https://www.zaproxy.org/) add-on that finds the **security-disclosure contact** for any host you're testing, using the free [lookup.disclose.io](https://lookup.disclose.io) attribution API.
