@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+
+# ZAP add-on build output
+*.zap
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+out/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+*.tmp
