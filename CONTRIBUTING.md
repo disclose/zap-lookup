@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping make disclosure contacts easy to find from inside OWASP ZAP. This is a small, focused codebase — plain Java, one right-click action — and contributions are welcome.
+Thanks for helping make disclosure contacts easy to find from inside ZAP. This is a small, focused codebase — plain Java, one right-click action — and contributions are welcome.
 
 ## Dev setup
 

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.disclose"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -26,7 +26,7 @@ dependencies {
 zapAddOn {
     addOnName.set("Disclosure Contact Lookup")
     addOnStatus.set(org.zaproxy.gradle.addon.AddOnStatus.ALPHA)
-    zapVersion.set("2.16.0")
+    zapVersion.set("2.17.0")
     manifest {
         author.set("disclose.io")
         repo.set("https://github.com/disclose/zap-lookup")
