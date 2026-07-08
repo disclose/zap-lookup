@@ -3,13 +3,17 @@ package io.disclose.zaplookup;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
+import org.parosproxy.paros.network.HttpHeader;
+import org.parosproxy.paros.network.HttpMalformedHeaderException;
+import org.parosproxy.paros.network.HttpMessage;
+import org.parosproxy.paros.network.HttpRequestHeader;
+import org.parosproxy.paros.network.HttpSender;
 
 /**
  * Thin client for the lookup.disclose.io attribution API.
@@ -19,25 +23,21 @@ import java.util.concurrent.ConcurrentHashMap;
  * selected HTTP message.</p>
  *
  * <p>A short-lived in-memory cache prevents lookup-spam when the same host is
- * resolved repeatedly. The HTTP call carries a hard timeout so a slow or
- * offline API degrades gracefully instead of hanging.</p>
+ * resolved repeatedly. HTTP connect/read timeouts are governed by ZAP's
+ * global Network connection options because HttpSender in ZAP 2.17.0 exposes
+ * no per-request timeout.</p>
  */
 public class LookupClient {
 
     private static final String ENDPOINT = "https://lookup.disclose.io/api/lookup";
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
     private static final long CACHE_TTL_MILLIS = 5 * 60 * 1000L; // 5 minutes
 
-    private final HttpClient httpClient;
+    private final HttpSender httpSender;
     private final Gson gson;
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     public LookupClient() {
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(CONNECT_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build();
+        this.httpSender = new HttpSender(HttpSender.MANUAL_REQUEST_INITIATOR);
         this.gson = new Gson();
     }
 
@@ -59,30 +59,35 @@ public class LookupClient {
         // Only the host travels in the body. Build via Gson to guarantee valid JSON.
         String body = gson.toJson(Map.of("input", host));
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(ENDPOINT))
-                .timeout(REQUEST_TIMEOUT)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .header("User-Agent", "zap-lookup/1.0 (+https://github.com/disclose/zap-lookup)")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-
-        HttpResponse<String> response;
+        HttpMessage message;
         try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (java.net.http.HttpTimeoutException e) {
-            throw new LookupException("Lookup timed out after " + REQUEST_TIMEOUT.toSeconds()
-                    + "s. The service may be slow or unreachable.", e);
-        } catch (java.io.IOException e) {
-            throw new LookupException("Could not reach lookup.disclose.io (offline?): "
-                    + e.getMessage(), e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new LookupException("Lookup was interrupted.", e);
+            HttpRequestHeader requestHeader =
+                    new HttpRequestHeader(
+                            HttpRequestHeader.POST, new URI(ENDPOINT, true), HttpHeader.HTTP11);
+            message = new HttpMessage(requestHeader);
+        } catch (HttpMalformedHeaderException | URIException e) {
+            throw new LookupException("Could not build the lookup request.", e);
         }
 
-        int code = response.statusCode();
+        message.getRequestHeader().setHeader(HttpHeader.CONTENT_TYPE, "application/json");
+        message.getRequestHeader().setHeader("Accept", "application/json");
+        message.getRequestHeader().setHeader(
+                HttpHeader.USER_AGENT, "zap-lookup/1.0 (+https://github.com/disclose/zap-lookup)");
+        message.setRequestBody(body);
+        message.getRequestHeader().setContentLength(message.getRequestBody().length());
+
+        try {
+            // ZAP 2.17.0 exposes no per-request timeout here; HttpSender uses the global
+            // Network connection timeout options for connect/read behavior.
+            httpSender.sendAndReceive(message, true);
+        } catch (SocketTimeoutException e) {
+            throw new LookupException("Lookup timed out. The service may be slow or unreachable.", e);
+        } catch (IOException e) {
+            throw new LookupException("Could not reach lookup.disclose.io (offline?): "
+                    + e.getMessage(), e);
+        }
+
+        int code = message.getResponseHeader().getStatusCode();
         if (code == 429) {
             throw new LookupException("Rate limited by lookup.disclose.io (30 req/min). "
                     + "Please wait a moment and try again.");
@@ -93,7 +98,7 @@ public class LookupClient {
 
         LookupResult result;
         try {
-            result = gson.fromJson(response.body(), LookupResult.class);
+            result = gson.fromJson(message.getResponseBody().toString(), LookupResult.class);
         } catch (JsonSyntaxException e) {
             throw new LookupException("Could not parse the lookup response.", e);
         }
