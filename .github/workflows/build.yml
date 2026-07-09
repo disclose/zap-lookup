@@ -36,7 +36,7 @@ jobs:
           find build -name "*.zap" -type f -exec ls -lh {} +
 
       - name: Upload ZAP add-on
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zap-lookup-addon
           path: build/**/*.zap
