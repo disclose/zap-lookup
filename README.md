@@ -25,7 +25,7 @@ Right-click a request, choose **"Find disclosure contact"**, and the add-on reso
 
 This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://github.com/disclose/burp-lookup) and Caido extensions.
 
-> **Status: alpha (first release).** CI-built and inspection-verified — it compiles, the extension auto-registers in the manifest, and it's headless- and EDT-safe — but a full runtime load in a live ZAP is still pending. Please report any load or UX issues.
+> **Status: alpha (first release).** CI-built and verified to load cleanly in ZAP 2.17.0: the extension initializes with no errors, and it's headless- and EDT-safe. Please report any load or UX issues.
 
 ---
 
@@ -40,9 +40,9 @@ This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://gi
 
 The add-on sends **only the host string** (e.g. `github.com`) to lookup.disclose.io. It never transmits the request line, headers, cookies, parameters, or body of your selected HTTP message. The API is free, CORS-open, and requires no authentication.
 
-A short in-memory cache (5 min TTL) and a 15-second request timeout keep it from spamming the API and from hanging the UI when offline.
+A short in-memory cache (5 min TTL) keeps it from spamming the API; connect/read timeouts follow ZAP's global Network connection options.
 
-The lookup call is made **directly** to lookup.disclose.io (via `java.net.http`), not through ZAP's HTTP sender — so it never appears in your ZAP History or Sites tree and generates no scan traffic. Trade-off: it uses the JVM's default network settings rather than ZAP's configured upstream/corporate proxy, so in locked-down egress environments the add-on needs direct outbound access to `lookup.disclose.io`.
+The lookup call is sent through ZAP's own `HttpSender` (as a manual-style request), so it honors your configured connection settings, including any upstream/corporate proxy. It is not added to your ZAP History or Sites tree and generates no scan traffic. In locked-down egress environments the add-on still needs outbound access to `lookup.disclose.io` (via your configured proxy, if any).
 
 ---
 
@@ -76,7 +76,7 @@ The `.zap` add-on file is written under `build/` (CI globs for it and uploads it
 src/main/java/io/disclose/zaplookup/
   ExtensionZapLookup.java     # ExtensionAdaptor entry point (hook)
   LookupPopupMenuItem.java    # PopupMenuItemHttpMessageContainer — the right-click item
-  LookupClient.java           # java.net.http.HttpClient call + cache + timeout
+  LookupClient.java           # ZAP HttpSender call + in-memory cache
   LookupResult.java           # typed view of the API response (Gson)
   LookupException.java        # UI-safe lookup failure
 ```
