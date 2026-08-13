@@ -21,6 +21,8 @@ public class LookupResult {
     private boolean hasErrors;
     private Attribution attribution;
     private List<Contact> contacts;
+    private List<ContactGroup> contactGroups;
+    private RouteSummary routeSummary;
     private Details details;
 
     public String input() {
@@ -43,17 +45,22 @@ public class LookupResult {
         return attribution;
     }
 
-    /** Contacts ranked best-first: verified before unverified, then high→low confidence. */
+    /** Flat fallback contacts, preserving the server's authoritative order. */
+    public List<Contact> contactsInServerOrder() {
+        return new ArrayList<>(contacts != null ? contacts : List.of());
+    }
+
+    /** Backward-compatible alias. The server already ranks by route quality. */
     public List<Contact> rankedContacts() {
-        List<Contact> ranked = new ArrayList<>(contacts != null ? contacts : List.of());
-        ranked.sort((a, b) -> {
-            int byVerified = Boolean.compare(b.verified(), a.verified());
-            if (byVerified != 0) {
-                return byVerified;
-            }
-            return Integer.compare(confidenceRank(b.confidence()), confidenceRank(a.confidence()));
-        });
-        return ranked;
+        return contactsInServerOrder();
+    }
+
+    public List<ContactGroup> contactGroups() {
+        return new ArrayList<>(contactGroups != null ? contactGroups : List.of());
+    }
+
+    public RouteSummary routeSummary() {
+        return routeSummary;
     }
 
     /** Human-readable explanation for failed/reserved inputs, if present. */
@@ -65,22 +72,6 @@ public class LookupResult {
             return details.explanation;
         }
         return details.voice;
-    }
-
-    static int confidenceRank(String confidence) {
-        if (confidence == null) {
-            return 0;
-        }
-        switch (confidence.toLowerCase()) {
-            case "high":
-                return 3;
-            case "medium":
-                return 2;
-            case "low":
-                return 1;
-            default:
-                return 0;
-        }
     }
 
     /** Attribution sub-object: who owns the asset. */
@@ -120,6 +111,12 @@ public class LookupResult {
         private String source;
         private String label;
         private boolean verified;
+        private String entity;
+        private String entityKey;
+        private String relation;
+        private String routeClass;
+        private String deliveryAgent;
+        private boolean authoritative;
 
         public String type() {
             return type != null ? type : "";
@@ -143,6 +140,88 @@ public class LookupResult {
 
         public boolean verified() {
             return verified;
+        }
+
+        public String entity() {
+            return entity != null ? entity : "";
+        }
+
+        public String relation() {
+            return relation != null ? relation : "";
+        }
+
+        public String routeClass() {
+            return routeClass != null ? routeClass : "";
+        }
+
+        public String deliveryAgent() {
+            return deliveryAgent != null ? deliveryAgent : "";
+        }
+
+        public boolean authoritative() {
+            return authoritative;
+        }
+    }
+
+    public static class ContactGroup {
+        private String entity;
+        private String entityKey;
+        private String relation;
+        private String routeClass;
+        private String scopeNote;
+        private String rationale;
+        private List<Contact> contacts;
+
+        public String entity() {
+            return entity != null ? entity : "";
+        }
+
+        public String relation() {
+            return relation != null ? relation : "";
+        }
+
+        public String routeClass() {
+            return routeClass != null ? routeClass : "";
+        }
+
+        public String scopeNote() {
+            return scopeNote != null ? scopeNote : "";
+        }
+
+        public String rationale() {
+            return rationale != null ? rationale : "";
+        }
+
+        public List<Contact> contacts() {
+            return new ArrayList<>(contacts != null ? contacts : List.of());
+        }
+    }
+
+    public static class RouteSummary {
+        private String routeClass;
+        private String headline;
+        private boolean firstPartyFound;
+        private boolean ownerRouteFound;
+        private boolean coordinatorAvailable;
+
+        public String routeClass() {
+            return routeClass != null ? routeClass : "";
+        }
+
+        public String headline() {
+            return headline != null ? headline : "";
+        }
+
+        public boolean firstPartyFound() {
+            return firstPartyFound;
+        }
+
+        public boolean ownerRouteFound() {
+            return ownerRouteFound;
+        }
+
+        public boolean coordinatorAvailable() {
+            return coordinatorAvailable;
         }
     }
 
