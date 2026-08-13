@@ -21,7 +21,7 @@
 
 A [ZAP](https://www.zaproxy.org/) add-on that finds the **security-disclosure contact** for any host you're testing, using the free [lookup.disclose.io](https://lookup.disclose.io) attribution API.
 
-Right-click a request, choose **"Find disclosure contact"**, and the add-on resolves the host to its owning organization and a ranked list of disclosure channels — `security.txt`, VDP / bug-bounty programs, PSIRT directories, and convention emails — so you know exactly where to report what you found.
+Right-click a request, choose **"Find disclosure contact"**, and the add-on resolves the host to its owning organization and server-ranked route groups — owner and authorized-agent routes first, coordinator fallbacks last — so you know exactly where to report what you found.
 
 This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://github.com/disclose/burp-lookup) and Caido extensions.
 
@@ -34,7 +34,7 @@ This is the open-source-proxy sibling of the disclose.io [Burp Suite](https://gi
 - Adds a **"Find disclosure contact"** right-click menu item on any HTTP message (History, Sites tree, etc.).
 - Calls `POST https://lookup.disclose.io/api/lookup` with the host and shows the result in a message dialog:
   - **Attribution** — owning organization, parent company, jurisdiction.
-  - **Ranked contacts** — verified channels first, then by confidence (type, value, verified/confidence).
+  - **Route-aware contacts** — grouped by responsible party and preserved in the API's authoritative order.
 
 ## Privacy
 
@@ -66,7 +66,7 @@ The `.zap` add-on file is written under `build/` (CI globs for it and uploads it
 
 1. Anywhere you have an HTTP request — the History tab, the Sites tree — **right-click**.
 2. Choose **"Find disclosure contact"**.
-3. A dialog shows the attribution and ranked disclosure contacts for the host.
+3. A dialog shows the attribution and route-aware disclosure contacts for the host.
 
 ---
 

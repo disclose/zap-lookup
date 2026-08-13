@@ -72,7 +72,7 @@ public class LookupPopupMenuItem extends PopupMenuItemHttpMessageContainer {
     }
 
     /** Renders a concise, readable multi-line summary for a plain message dialog. */
-    private static String formatResult(String host, LookupResult result) {
+    static String formatResult(String host, LookupResult result) {
         StringBuilder sb = new StringBuilder();
         sb.append("Disclosure contact lookup\n");
         sb.append("Host: ").append(host).append('\n');
@@ -92,8 +92,14 @@ public class LookupPopupMenuItem extends PopupMenuItemHttpMessageContainer {
 
         sb.append("Status: ").append(result.status()).append('\n');
 
-        List<LookupResult.Contact> contacts = result.rankedContacts();
-        if (contacts.isEmpty()) {
+        LookupResult.RouteSummary routeSummary = result.routeSummary();
+        if (routeSummary != null && !routeSummary.headline().isBlank()) {
+            sb.append("Route: ").append(routeSummary.headline()).append('\n');
+        }
+
+        List<LookupResult.ContactGroup> groups = result.contactGroups();
+        List<LookupResult.Contact> contacts = result.contactsInServerOrder();
+        if (groups.isEmpty() && contacts.isEmpty()) {
             String explanation = result.detailExplanation();
             sb.append('\n');
             if (explanation != null && !explanation.isBlank()) {
@@ -101,23 +107,46 @@ public class LookupPopupMenuItem extends PopupMenuItemHttpMessageContainer {
             } else {
                 sb.append("No disclosure contact found for this host.");
             }
+        } else if (!groups.isEmpty()) {
+            sb.append("\nReporting routes (server order):\n");
+            for (LookupResult.ContactGroup group : groups) {
+                sb.append("\n").append(group.entity())
+                        .append(" [").append(group.routeClass()).append(" / ")
+                        .append(group.relation()).append("]\n");
+                if (!group.scopeNote().isBlank()) {
+                    sb.append("  ").append(group.scopeNote()).append('\n');
+                }
+                if (!group.rationale().isBlank()) {
+                    sb.append("  ").append(group.rationale()).append('\n');
+                }
+                for (LookupResult.Contact contact : group.contacts()) {
+                    appendContact(sb, contact);
+                }
+            }
         } else {
-            sb.append("\nContacts (best first):\n");
+            sb.append("\nContacts (server order):\n");
             for (LookupResult.Contact c : contacts) {
-                sb.append("  • ").append(c.type());
-                if (!c.value().isBlank()) {
-                    sb.append(" — ").append(c.value());
-                }
-                String badge = c.verified()
-                        ? "verified"
-                        : (c.confidence().isBlank() ? "" : c.confidence() + " confidence");
-                if (!badge.isBlank()) {
-                    sb.append(" [").append(badge).append(']');
-                }
-                sb.append('\n');
+                appendContact(sb, c);
             }
         }
         return sb.toString();
+    }
+
+    private static void appendContact(StringBuilder sb, LookupResult.Contact c) {
+        sb.append("  • ").append(c.type());
+        if (!c.value().isBlank()) {
+            sb.append(" — ").append(c.value());
+        }
+        String badge = c.verified()
+                ? "verified"
+                : (c.confidence().isBlank() ? "" : c.confidence() + " confidence");
+        if (!badge.isBlank()) {
+            sb.append(" [").append(badge).append(']');
+        }
+        if (!c.deliveryAgent().isBlank()) {
+            sb.append(" via ").append(c.deliveryAgent());
+        }
+        sb.append('\n');
     }
 
     private static void showInfo(String text) {

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.disclose"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -21,6 +21,12 @@ java {
 dependencies {
     // Gson is NOT provided by ZAP at runtime -> bundled into the .zap add-on.
     implementation("com.google.code.gson:gson:2.14.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.14.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.2")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 zapAddOn {
