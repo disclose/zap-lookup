@@ -3,6 +3,15 @@
 All notable changes to the Disclosure Contact Lookup ZAP add-on are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.1] - 2026-10-09
+
+### Fixed
+
+- Lookups now use a 60s per-request response timeout instead of ZAP's global 20s
+  default, which failed most first-time lookups for large organizations (30 to 40s).
+- A 503 "service busy" response is retried once after its Retry-After delay (capped
+  at 15s), and a clear busy message is shown if it still fails.
+
 ## [1.0.1] - 2026-07-08
 
 ### Changed
